@@ -2,13 +2,17 @@
   "name": "blockchain",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dev/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "dev --watch dev -e js dev/app.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "sha256": "^0.2.0"
+    "body-parser": "^1.19.0",
+    "express": "^4.17.0",
+    "sha256": "^0.2.0",
+    "uuid": "^3.3.2"
   }
 }
