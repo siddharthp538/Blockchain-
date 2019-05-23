@@ -59,7 +59,7 @@ app.get('/mine' , (req,res)=>{
     const prevHash = lastBlock['hash'];
     const currentBlock = {
         transactions : bitcoin.newTransactions,
-        index : lastBlock['index']
+        index : lastBlock['index']+1
     };
     const nonce = bitcoin.proofOfWork(prevHash, currentBlock);
     const currentHash  = bitcoin.hashBlock(prevHash, currentBlock, nonce);
@@ -150,6 +150,53 @@ app.post('/register-nodes-bulk', (req,res)=>{
     res.send({note:'Bulk registration successfull!'});
     
 });
+
+app.get('/consensus', function(req, res) {
+	const requestPromises = [];
+	bitcoin.networkNodes.forEach(networkNodeUrl => {
+		const requestOptions = {
+			uri: networkNodeUrl + '/blockchain',
+			method: 'GET',
+			json: true
+		};
+
+		requestPromises.push(rp(requestOptions));
+	});
+    console.log('array size: '+requestPromises.length);
+	Promise.all(requestPromises)
+	.then(blockchains => {
+		const currentChainLength = bitcoin.chain.length;
+		let maxChainLength = currentChainLength;
+		let newLongestChain = null;
+		let newPendingTransactions = null;
+
+		blockchains.forEach(blockchain => {
+			if (blockchain.chain.length > maxChainLength) {
+				maxChainLength = blockchain.chain.length;
+				newLongestChain = blockchain.chain;
+				newPendingTransactions = blockchain.newTransactions;
+			};
+		});
+
+        let value = bitcoin.chainIsValid(newLongestChain)
+        console.log('value: '+ value);
+		if (!newLongestChain || (newLongestChain && !bitcoin.chainIsValid(newLongestChain))) {
+			res.json({
+				note: 'Current chain has not been replaced.',
+				chain: bitcoin.chain
+			});
+		}
+		else {  
+			bitcoin.chain = newLongestChain;
+			bitcoin.newTransactions = newPendingTransactions;
+			res.json({
+				note: 'This chain has been replaced.',
+				chain: bitcoin.chain
+			});
+		}
+	});
+});
+
 
 
 app.listen(port,()=>{
