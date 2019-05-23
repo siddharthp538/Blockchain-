@@ -81,10 +81,55 @@ Blockchain.prototype.chainIsValid = function(blockchain) {
     console.log("correct prev block hash: "  + correctPreviousBlockHash);
     console.log("correct hash: " + correctHash);
     console.log("correct transactions: " + correctTransactions);
-    
+
 	if (!correctNonce || !correctPreviousBlockHash || !correctHash || !correctTransactions) validChain = false;
 
 	return validChain;
 };
 
+Blockchain.prototype.getBlock = function(blockHash){
+    let correctblock = null;
+    this.chain.forEach(block => {
+        if(block.hash === blockHash) correctblock = block; 
+    });
+    return correctblock;
+
+}
+
+Blockchain.prototype.getTransaction = function(transactionId) {
+    let currTransactions = null;
+    let currBlock = null;
+    this.chain.forEach(block => {
+        block.transactions.forEach(transaction => {
+            if(transaction.transactionId === transactionId){
+                currTransactions = transaction;
+                currBlock = block;
+            }
+        });
+    });
+    return {
+        transaction : currTransactions,
+        block : currBlock
+    }
+}
+
+Blockchain.prototype.getAddressData = function(address) {
+    const addressTransaction = [];
+    this.chain.forEach(block => {
+        block.transactions.forEach(transaction => {
+            if(transaction.sender === address || transaction.recipient === address){
+                addressTransaction.push(transaction);
+            }
+        });
+    });
+    let balance=0;
+    addressTransaction.forEach(tr => {
+        if(tr.sender === address) balance -= tr.amount;
+        else if(tr.recipient === address) balance += tr.amount;
+    });
+    return {
+        addressTransaction : addressTransaction,
+        addressBalance : balance
+    }
+}
 module.exports = Blockchain;
